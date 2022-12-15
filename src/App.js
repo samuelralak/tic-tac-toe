@@ -3,9 +3,20 @@ import { useState } from 'react'
 
 const human = 'x'
 const computer = 'o'
-const boardConfig = {
+const defaultBoardConfig = {
   rows: 3,
   cols: 3,
+}
+
+const layoutConfigs = [
+  defaultBoardConfig,
+  { rows: 4, cols: 4 },
+  { rows: 5, cols: 5 },
+  { rows: 6, cols: 6 },
+]
+
+function classNames(...classes) {
+  return classes.filter(Boolean).join(' ')
 }
 
 const pickFromDiagonal = (arr, direction = 'left') => {
@@ -71,8 +82,8 @@ const simulateGame = (board, config) => {
   return 0
 }
 
-function minMax(board, depth, isMax) {
-  const score = simulateGame(board, boardConfig)
+function minMax(board, depth, isMax, config) {
+  const score = simulateGame(board, config)
   let bestScore = -Infinity
 
   // human won game
@@ -91,11 +102,14 @@ function minMax(board, depth, isMax) {
   }
 
   if (isMax) {
-    for (let i = 0; i < boardConfig.rows; i++) {
-      for (let j = 0; j < boardConfig.cols; j++) {
+    for (let i = 0; i < config.rows; i++) {
+      for (let j = 0; j < config.cols; j++) {
         if (!board[i][j]) {
           board[i][j] = human
-          bestScore = Math.max(bestScore, minMax(board, depth + 1, !isMax))
+          bestScore = Math.max(
+            bestScore,
+            minMax(board, depth - 1, !isMax, config)
+          )
           board[i][j] = false
         }
       }
@@ -103,11 +117,14 @@ function minMax(board, depth, isMax) {
   } else {
     bestScore = Infinity
 
-    for (let i = 0; i < boardConfig.rows; i++) {
-      for (let j = 0; j < boardConfig.cols; j++) {
+    for (let i = 0; i < config.rows; i++) {
+      for (let j = 0; j < config.cols; j++) {
         if (!board[i][j]) {
           board[i][j] = computer
-          bestScore = Math.min(bestScore, minMax(board, depth + 1, !isMax))
+          bestScore = Math.min(
+            bestScore,
+            minMax(board, depth + 1, isMax, config)
+          )
           board[i][j] = false
         }
       }
@@ -117,16 +134,16 @@ function minMax(board, depth, isMax) {
   return bestScore
 }
 
-function nextMove(board) {
+function nextMove(board, config) {
   let bestScore = -Infinity
   const bestMove = { row: -1, col: -1 }
 
-  for (let i = 0; i < boardConfig.rows; i++) {
-    for (let j = 0; j < boardConfig.cols; j++) {
+  for (let i = 0; i < config.rows; i++) {
+    for (let j = 0; j < config.cols; j++) {
       // Check if cell is empty
       if (!board[i][j]) {
         board[i][j] = human
-        const score = minMax(board, 0, false)
+        const score = minMax(board, 0, false, config)
         board[i][j] = false
 
         if (score > bestScore) {
@@ -142,32 +159,75 @@ function nextMove(board) {
 }
 
 function App() {
+  const [boardConfig, setBoardConfig] = useState(defaultBoardConfig)
   const [board, setBoard] = useState(
-    Array.from(Array(3), _ => [...Array(3).fill(false)])
+    Array.from(Array(boardConfig.rows), _ => [
+      ...Array(boardConfig.cols).fill(false),
+    ])
   )
-  const onPlayMove = (row, col) => {
+  const onPlayMove = (row, col, config) => {
     const updatedBoard = board.slice()
     updatedBoard[row][col] = human
-    const computerMove = nextMove(updatedBoard)
+    const computerMove = nextMove(updatedBoard, config)
     updatedBoard[computerMove.row][computerMove.col] = computer
     setBoard(updatedBoard)
   }
 
+  const onUpdateBoardLayout = layout => {
+    setBoardConfig(layout)
+    setBoard(
+      Array.from(Array(layout.rows), _ => [...Array(layout.cols).fill(false)])
+    )
+  }
+
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 my-20">
       <div className="mx-auto max-w-3xl">
+        <div className="border-b border-gray-200">
+          <div className="sm:flex sm:items-baseline">
+            <h3 className="text-lg font-medium leading-6 text-gray-900">
+              Layout
+            </h3>
+            <div className="mt-4 sm:mt-0 sm:ml-10">
+              <nav className="-mb-px flex space-x-8">
+                {layoutConfigs.map((layout, index) => (
+                  <button
+                    key={`${index}-${layout.rows}-${layout.cols}`}
+                    onClick={() => onUpdateBoardLayout(layout)}
+                    className={classNames(
+                      layout === boardConfig
+                        ? 'border-indigo-500 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      'whitespace-nowrap pb-4 px-1 font-medium text-sm'
+                    )}
+                  >
+                    {layout.rows} x {layout.cols}
+                  </button>
+                ))}
+              </nav>
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col mt-8">
           <table className="table-fixed text-center">
             <tbody className="divide-y divide-gray-200">
               {board.map((row, index) => (
-                <tr key={`row-${index}`} className="divide-x divide-gray-200">
+                <tr key={`row-${index}`} className={`divide-x divide-gray-200`}>
                   {row.map((col, idx) => (
                     <td
                       key={`col-${index}-${idx}`}
-                      className="py-3 cursor-pointer h-16"
-                      onClick={() => onPlayMove(index, idx)}
+                      onClick={() => onPlayMove(index, idx, boardConfig)}
+                      className={classNames(
+                        col === human
+                          ? 'bg-green-100 text-green-700'
+                          : col === computer
+                          ? 'bg-red-100 text-red-700'
+                          : '',
+                        'py-3 cursor-pointer h-16 text-2xl '
+                      )}
                     >
-                      {col}
+                      {col || '_'}
                     </td>
                   ))}
                 </tr>
