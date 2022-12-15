@@ -6,7 +6,7 @@
  * @returns {string}
  */
 export function classNames(...classes) {
-    return classes.filter(Boolean).join(' ')
+  return classes.filter(Boolean).join(' ')
 }
 
 /**
@@ -18,19 +18,19 @@ export function classNames(...classes) {
  * @returns {string}
  */
 export const pickFromDiagonal = (arr, direction = 'left') => {
-    let values = ''
+  let values = ''
 
-    if (direction === 'right') {
-        arr = arr.slice().reverse()
+  if (direction === 'right') {
+    arr = arr.slice().reverse()
+  }
+
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr[i].length; j++) {
+      if (i === j) {
+        values = values + arr[i][j]
+      }
     }
+  }
 
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr[i].length; j++) {
-            if (i === j) {
-                values = values + arr[i][j]
-            }
-        }
-    }
-
-    return values
+  return values
 }

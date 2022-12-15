@@ -1,6 +1,6 @@
 import { uniq } from 'lodash'
 import { useState } from 'react'
-import {classNames, pickFromDiagonal} from "./utils";
+import { classNames, pickFromDiagonal } from './utils'
 
 const human = 'x'
 const computer = 'o'
