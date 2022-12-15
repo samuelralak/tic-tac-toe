@@ -21,7 +21,7 @@ export const pickFromDiagonal = (arr, direction = 'left') => {
   let values = ''
 
   if (direction === 'right') {
-    arr = arr.slice().map(el => el.reverse())
+    arr = arr.slice().reverse()
   }
 
   for (let i = 0; i < arr.length; i++) {

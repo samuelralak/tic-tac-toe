@@ -7,7 +7,7 @@ it('picks diagonal values from matrix', () => {
     ['g', 'j', 'k'],
   ]
   expect(pickFromDiagonal(matrix)).toEqual('esk')
-  expect(pickFromDiagonal(matrix, 'right')).toEqual('tsg')
+  expect(pickFromDiagonal(matrix, 'right')).toEqual('gst')
 })
 
 it('joins class names', () => {

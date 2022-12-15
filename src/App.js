@@ -1,157 +1,16 @@
-import { uniq } from 'lodash'
 import { useState } from 'react'
-import { classNames, pickFromDiagonal } from './utils'
-
-const human = 'x'
-const computer = 'o'
-
-const defaultBoardConfig = {
-  rows: 3,
-  cols: 3,
-}
-
-const layoutConfigs = [
+import { classNames } from './utils'
+import {
   defaultBoardConfig,
-  { rows: 4, cols: 4 },
-  { rows: 5, cols: 5 },
-  { rows: 6, cols: 6 },
-]
-
-const staticScore = board => board.flat().filter(Boolean).length + 1
-
-const simulateGame = (board, config) => {
-  // check rows for victor
-  for (let index = 0; index < config.rows; index++) {
-    const row = uniq(board[index]).join('')
-
-    if (row.length === 1 && row === human) {
-      return staticScore(board)
-    }
-
-    if (row.length === 1 && row === computer) {
-      return -staticScore(board)
-    }
-  }
-
-  // check columns for victor
-  for (let index = 0; index < config.cols; index++) {
-    const column = uniq(board.map(col => col[index])).join('')
-
-    if (column.length === 1 && column === human) {
-      return staticScore(board)
-    }
-
-    if (column.length === 1 && column === computer) {
-      return -staticScore(board)
-    }
-  }
-
-  // check diagonal values for victor
-  const leftToRight = uniq(pickFromDiagonal(board).split('')).join('')
-  const rightToLeft = uniq(pickFromDiagonal(board, 'right').split('')).join('')
-
-  if (leftToRight.length === 1 && leftToRight === human) {
-    return staticScore(board)
-  } else if (leftToRight.length === 1 && leftToRight === computer) {
-    return -staticScore(board)
-  }
-
-  if (rightToLeft.length === 1 && rightToLeft === human) {
-    return staticScore(board)
-  } else if (rightToLeft.length === 1 && rightToLeft === computer) {
-    return -staticScore(board)
-  }
-
-  return 0
-}
-
-function minMax(board, depth, isMax, config) {
-  const score = simulateGame(board, config)
-
-  // human won game
-  if (score === staticScore(board)) {
-    return score
-  }
-
-  // computer won game
-  if (score === -staticScore(board)) {
-    return score
-  }
-
-  // draw
-  if (score === 0) {
-    return score
-  }
-
-  if (isMax) {
-    let bestScore = -Infinity
-
-    for (let i = 0; i < config.rows; i++) {
-      for (let j = 0; j < config.cols; j++) {
-        if (board[i][j].toString() === 'false') {
-          board[i][j] = human
-          bestScore = Math.max(
-            bestScore,
-            minMax(board, depth - 1, !isMax, config)
-          )
-          board[i][j] = false
-        }
-      }
-    }
-
-    return bestScore
-  } else {
-    let bestScore = Infinity
-
-    for (let i = 0; i < config.rows; i++) {
-      for (let j = 0; j < config.cols; j++) {
-        if (board[i][j].toString() === 'false') {
-          board[i][j] = computer
-          bestScore = Math.min(
-            bestScore,
-            minMax(board, depth - 1, !isMax, config)
-          )
-
-          board[i][j] = false
-        }
-      }
-    }
-
-    return bestScore
-  }
-}
-
-function nextMove(board, config) {
-  let bestScore = -Infinity
-  const bestMove = { row: -1, col: -1 }
-
-  for (let i = 0; i < config.rows; i++) {
-    for (let j = 0; j < config.cols; j++) {
-      // Check if cell is empty
-      if (!board[i][j]) {
-        board[i][j] = human
-        const score = minMax(board, 0, false, config)
-        board[i][j] = false
-
-        if (score > bestScore) {
-          bestMove.row = i
-          bestMove.col = j
-          bestScore = score
-        }
-      }
-    }
-  }
-
-  return bestMove
-}
+  getBoardLayout,
+  layoutConfigs,
+} from './services/board'
+import { computer, human, nextMove } from './services/player'
 
 function App() {
   const [boardConfig, setBoardConfig] = useState(defaultBoardConfig)
-  const [board, setBoard] = useState(
-    Array.from(Array(boardConfig.rows), _ => [
-      ...Array(boardConfig.cols).fill(false),
-    ])
-  )
+  const [board, setBoard] = useState(getBoardLayout(boardConfig))
+
   const onPlayMove = (row, col, config) => {
     const updatedBoard = board.slice()
     updatedBoard[row][col] = human
@@ -166,9 +25,7 @@ function App() {
 
   const onUpdateBoardLayout = layout => {
     setBoardConfig(layout)
-    setBoard(
-      Array.from(Array(layout.rows), _ => [...Array(layout.cols).fill(false)])
-    )
+    setBoard(getBoardLayout(layout))
   }
 
   return (
