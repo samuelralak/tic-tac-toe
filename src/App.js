@@ -6,6 +6,7 @@ import {
   layoutConfigs,
 } from './services/board'
 import { computer, human, nextMove } from './services/player'
+import SaveHistory from './components/SaveHistory'
 
 function App() {
   const [boardConfig, setBoardConfig] = useState(defaultBoardConfig)
@@ -31,11 +32,16 @@ function App() {
   return (
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 my-20">
       <div className="mx-auto max-w-3xl">
+        <div className="mb-10">
+          <SaveHistory config={boardConfig} gameState={board} />
+        </div>
+
         <div className="border-b border-gray-200">
           <div className="sm:flex sm:items-baseline">
             <h3 className="text-lg font-medium leading-6 text-gray-900">
               Layout
             </h3>
+
             <div className="mt-4 sm:mt-0 sm:ml-10">
               <nav className="-mb-px flex space-x-8">
                 {layoutConfigs.map((layout, index) => (

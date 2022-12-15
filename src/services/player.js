@@ -25,10 +25,10 @@ export const calculateScore = (board, config) => {
     const row = uniq(board[index]).join('')
 
     if (row.length === 1 && row === human) {
-      return staticScore(board)
-    }
+      if (row === human) {
+        return staticScore(board)
+      }
 
-    if (row.length === 1 && row === computer) {
       return -staticScore(board)
     }
   }
@@ -38,10 +38,10 @@ export const calculateScore = (board, config) => {
     const column = uniq(board.map(col => col[index])).join('')
 
     if (column.length === 1 && column === human) {
-      return staticScore(board)
-    }
+      if (column === human) {
+        return staticScore(board)
+      }
 
-    if (column.length === 1 && column === computer) {
       return -staticScore(board)
     }
   }
@@ -50,15 +50,17 @@ export const calculateScore = (board, config) => {
   const leftToRight = uniq(pickFromDiagonal(board).split('')).join('')
   const rightToLeft = uniq(pickFromDiagonal(board, 'right').split('')).join('')
 
-  if (leftToRight.length === 1 && leftToRight === human) {
+  if (
+    (leftToRight.length === 1 && leftToRight === human) ||
+    (rightToLeft.length === 1 && rightToLeft === human)
+  ) {
     return staticScore(board)
-  } else if (leftToRight.length === 1 && leftToRight === computer) {
-    return -staticScore(board)
   }
 
-  if (rightToLeft.length === 1 && rightToLeft === human) {
-    return staticScore(board)
-  } else if (rightToLeft.length === 1 && rightToLeft === computer) {
+  if (
+    (leftToRight.length === 1 && leftToRight === computer) ||
+    (rightToLeft.length === 1 && rightToLeft === computer)
+  ) {
     return -staticScore(board)
   }
 
@@ -77,6 +79,7 @@ export const calculateScore = (board, config) => {
  */
 export function minMax(board, depth, isMax, config) {
   const score = calculateScore(board, config)
+  let bestScore = -Infinity
 
   // human won game
   if (score === staticScore(board)) {
@@ -94,8 +97,6 @@ export function minMax(board, depth, isMax, config) {
   }
 
   if (isMax) {
-    let bestScore = -Infinity
-
     for (let i = 0; i < config.rows; i++) {
       for (let j = 0; j < config.cols; j++) {
         if (board[i][j].toString() === 'false') {
@@ -108,10 +109,8 @@ export function minMax(board, depth, isMax, config) {
         }
       }
     }
-
-    return bestScore
   } else {
-    let bestScore = Infinity
+    bestScore = Infinity
 
     for (let i = 0; i < config.rows; i++) {
       for (let j = 0; j < config.cols; j++) {
@@ -126,9 +125,9 @@ export function minMax(board, depth, isMax, config) {
         }
       }
     }
-
-    return bestScore
   }
+
+  return bestScore
 }
 
 /**
