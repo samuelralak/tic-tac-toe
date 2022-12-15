@@ -1,8 +1,10 @@
 import { uniq } from 'lodash'
 import { useState } from 'react'
+import {classNames, pickFromDiagonal} from "./utils";
 
 const human = 'x'
 const computer = 'o'
+
 const defaultBoardConfig = {
   rows: 3,
   cols: 3,
@@ -15,30 +17,7 @@ const layoutConfigs = [
   { rows: 6, cols: 6 },
 ]
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ')
-}
-
-const pickFromDiagonal = (arr, direction = 'left') => {
-  let values = ''
-
-  if (direction === 'right') {
-    arr = arr.slice().reverse()
-  }
-
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr[i].length; j++) {
-      if (i === j) {
-        values = values + arr[i][j]
-      }
-    }
-  }
-
-  return values
-}
-
 const staticScore = board => board.flat().filter(Boolean).length + 1
-const canMakeMove = board => board.flat().filter(Boolean).length >= 1
 
 const simulateGame = (board, config) => {
   // check rows for victor
@@ -47,7 +26,9 @@ const simulateGame = (board, config) => {
 
     if (row.length === 1 && row === human) {
       return staticScore(board)
-    } else if (row.length === 1 && row === computer) {
+    }
+
+    if (row.length === 1 && row === computer) {
       return -staticScore(board)
     }
   }
@@ -58,7 +39,9 @@ const simulateGame = (board, config) => {
 
     if (column.length === 1 && column === human) {
       return staticScore(board)
-    } else if (column.length === 1 && column === computer) {
+    }
+
+    if (column.length === 1 && column === computer) {
       return -staticScore(board)
     }
   }
@@ -84,7 +67,6 @@ const simulateGame = (board, config) => {
 
 function minMax(board, depth, isMax, config) {
   const score = simulateGame(board, config)
-  let bestScore = -Infinity
 
   // human won game
   if (score === staticScore(board)) {
@@ -97,14 +79,16 @@ function minMax(board, depth, isMax, config) {
   }
 
   // draw
-  if (canMakeMove(board) === false) {
-    return 0
+  if (score === 0) {
+    return score
   }
 
   if (isMax) {
+    let bestScore = -Infinity
+
     for (let i = 0; i < config.rows; i++) {
       for (let j = 0; j < config.cols; j++) {
-        if (!board[i][j]) {
+        if (board[i][j].toString() === 'false') {
           board[i][j] = human
           bestScore = Math.max(
             bestScore,
@@ -114,24 +98,27 @@ function minMax(board, depth, isMax, config) {
         }
       }
     }
+
+    return bestScore
   } else {
-    bestScore = Infinity
+    let bestScore = Infinity
 
     for (let i = 0; i < config.rows; i++) {
       for (let j = 0; j < config.cols; j++) {
-        if (!board[i][j]) {
+        if (board[i][j].toString() === 'false') {
           board[i][j] = computer
           bestScore = Math.min(
             bestScore,
-            minMax(board, depth + 1, isMax, config)
+            minMax(board, depth - 1, !isMax, config)
           )
+
           board[i][j] = false
         }
       }
     }
-  }
 
-  return bestScore
+    return bestScore
+  }
 }
 
 function nextMove(board, config) {
@@ -168,9 +155,13 @@ function App() {
   const onPlayMove = (row, col, config) => {
     const updatedBoard = board.slice()
     updatedBoard[row][col] = human
+
+    // computer makes move
     const computerMove = nextMove(updatedBoard, config)
-    updatedBoard[computerMove.row][computerMove.col] = computer
-    setBoard(updatedBoard)
+    if (computerMove.row >= 0 && computerMove.col >= 0) {
+      updatedBoard[computerMove.row][computerMove.col] = computer
+      setBoard(updatedBoard)
+    }
   }
 
   const onUpdateBoardLayout = layout => {
@@ -196,9 +187,9 @@ function App() {
                     onClick={() => onUpdateBoardLayout(layout)}
                     className={classNames(
                       layout === boardConfig
-                        ? 'border-indigo-500 text-indigo-600'
+                        ? 'border-indigo-500 text-indigo-600 bg-indigo-100 rounded-lg'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-                      'whitespace-nowrap pb-4 px-1 font-medium text-sm'
+                      'whitespace-nowrap py-2 px-2 font-medium text-sm mb-2'
                     )}
                   >
                     {layout.rows} x {layout.cols}
